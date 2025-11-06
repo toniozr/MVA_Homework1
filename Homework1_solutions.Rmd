@@ -74,13 +74,38 @@ The vast majority of the numerical variables are positively correlated. In fact,
 Nonetheless, there are some particular interesting positive correlations. To analyze these results more effectively, we will divide the study into three groups:
 
 1) Very strong correlated variables (correlation > |0.90|):
--
+- EFF and PTS (r = 0.95): Efficiency and points are almost perfectly correlated. These suggests that the more points a player scores, the more efficient is the player.
 
-2) Strong correlated variables (|0.90| > correlation > |0.70|):
+- DREB and REB (r = 0.97): Total rebounds is the sum of offensive rebounds and defensive rebounds. Nonetheless, it makes sense that defensive rebounds dominate total rebounds, since defensive rebounds are typically more frequent than offensive rebounds.
 
-3) Moderate correlated variables (|0.70| > correlation > |0.50|):
+- EFF and DREB (r = 0.90): Players who grab defensive rebounds tend to have higher efficiency ratings.
 
+2) Strong correlated variables (|0.90| > correlation > |0.80|):
+- EFF and MIN (r = 0.83), MIN and PTS (r = 0.84): The more minutes a player spends on the court, the more points they tend to score, and, consequently, the higher their efficiency.
 
+- OREB and REB (r = 0.87): Obviously, the total rebounds are correlated with offensive rebounds, since it contributes directly to the total number of rebounds.
+
+- EFF and REB (r = 0.899): Usually, the more rebounds a player catches, the more efficient a player is.
+
+- DREB and PTS (r = 0.817): The more defensive rebounds a player collects, the higher the probability of scoring, since each rebound creates an additional offensive opportunity, and therefore, more points can be scored.
+
+3) Moderate correlated variables (|0.80| > correlation > |0.65|):
+
+- AST and EFF (r = 0.666), EFF and TO (r = 0.761), AST and TO (r = 0.772): Efficiency is partly determined by assists and turnovers, so it makes sense that these variables are correlated. What is surprising, however, is that the correlation between efficiency and turnovers is positive, since a higher number of turnovers would normally be expected to reduce a player’s efficiency. On the other hand, the more assists a player makes, the more frequently they handle the ball, which naturally increases the likelihood of committing a turnover.
+
+- EFF and OREB (r = 0.717): Efficiency is partly determined by offensive rebounds, so it makes sense that these variables are correlated.
+
+- MIN - REB (r = 0.666), DREB - MIN (r = 0.731), AST - MIN (r = 0.707), MIN - TO (r = 0.663): The more minutes a player spends on the court, the more rebounds, assists, and turnovers they can make.
+
+- 2PT FG - FG (r = 0.780): Usually, players who tend to score more two-point shots will have a higher overall field goal percentage. Notice that FG and 3PT.FG are negatively correlated, since three-point shots are generally more difficult to make and therefore lower the overall field goal percentage.
+
+- DREB and OREB (r = 0.728): If a player is good at grabbing offensive rebounds, they are likely to be good at grabbing defensive rebounds as well.
+
+- DREB - TO (r = 0.666): If a player grabs a defensive rebound, they immediately transition to offense, which increases the chances of losing the ball.
+
+- PTS and TO (r = 0.761), PTS and REB (r = 0.788): The more points a player scores, the more frequently they handle the ball, which increases their probability of losing it. Similarly, the more rebounds a player collects, the higher their chances of scoring.
+
+To summarize the previous ideas, it is clear that a player’s efficiency, the number of points they score, the minutes they spend on the court, and the rebounds they collect are highly correlated. It is also important to note that the MIN variable shows a moderate to strong correlation with almost all numerical variables. This makes complete sense, as the more time a player spends on the court, the higher all their recorded statistics are likely to be. Moreover, since the EFF variable is derived from individual performance indicators, it is expected to be correlated with them. However, because not all statistics contribute equally to a player’s efficiency, the strength of these correlations varies across variables.
 
 ```{r}
 requested_var <- c("Position", "MIN", "FG", "2PT FG", "3PT FG", "FT", "OREB", "DREB", "REB", "AST", "PF", "TO", "STL", "BLK", "EFF", "PTS")
@@ -88,9 +113,8 @@ requested_var <- c("Position", "MIN", "FG", "2PT FG", "3PT FG", "FT", "OREB", "D
 df_subset <- df[,requested_var]
 
 cor_matrix <- cor(df_subset[,-1])
-cor_matrix
-corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation Matrix of Basketball Statistics")
 
+corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation Matrix of Basketball Statistics")
 ```
 
 
@@ -121,6 +145,7 @@ corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation M
 ## Convert the numerical variables to binary variables with two categories as “over average” and “below average” performances
 
 ## Apply MCA on these variables and interpret your findings
+
 
 
 
