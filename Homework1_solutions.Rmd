@@ -28,6 +28,7 @@ rm(list = ls())
 
 library(readxl)
 library(corrplot)
+library(FactoMineR)
 ```
 
 # Exploratory data analysis
@@ -143,8 +144,91 @@ corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation M
 # Application of MCA
 
 ## Convert the numerical variables to binary variables with two categories as “over average” and “below average” performances
+A function has been created to convert the numerical variables into binary variables. Consequently, a new data frame called *df_binary* has been generated. After the categorization of the numerical variables, all variables in this new data frame are categorical, which makes it suitable for applying MCA.
+
+```{r}
+df_binary <- df_subset
+
+binary <- function(x){
+  ifelse(x > mean(x), "over_average", "below_average")
+}
+
+for(col in names(df_subset[,-1])) {
+  df_binary[[col]] <- as.factor(binary(df_subset[[col]]))
+}
+
+summary(df_binary)
+```
+
 
 ## Apply MCA on these variables and interpret your findings
+The *MCA* function from the *FactoMineR* library has been applied to the *df_binary*.
+
+Note that the maximum number of dimensions is defined as $ \min(n_{\text{obs}} - 1, K - J) $, where $ K $ is the total number of categories ($2 \cdot 15 + 3 = 33$) and $ J $ is the total number of categorical variables ($16$). Therefore, the maximum number of dimensions is $ 33 - 16 = 17 $.
+
+The average inertia per dimension is $ \text{avg} = \frac{1}{K - J} = \frac{1}{17} $. Hence, the dimensions that should be retained are those whose eigenvalues are greater than the average inertia; in other words, those satisfying $ \lambda_i > \frac{1}{17} $.
+
+After plotting a bar plot of the eigenvalues with a horizontal red line at $ h = \frac{1}{17} $, it can be observed that the dimensions to be retained are dimensions $1$, $2$ and $3$. Dimension $4$ lies on the threshold, as its eigenvalue is approximately equal to the average inertia.
+
+In order to determine which categories contribute the most to each of the relevant dimensions, two complementary strategies have been applied. On the one hand, categories with higher $cos^2$ values in a given dimension are considered to contribute more strongly to that dimension. On the other hand, by examining the category cloud plots, we can visually observe how the dimensions separate the categories and which variables are most influential in defining the corresponding axes.
+
+Dimension $1$ is clearly defined by the efficiency of a player. Other variables, such as the minutes played, points scored, number of rebounds, and turnovers, also contribute to shaping this dimension. Therefore, Dimension $1$ can be interpreted as the performance axis.
+
+Moreover, considering the coordinates of the different categories, Dimension $1$ clearly separates the below_average categories from the over_average ones. The plot shows that all below_average categories are located on the left, whereas the over_average categories are on the right.
+
+By examining the players’ positions in the graph, it becomes evident which players perform best and worst overall. Those positioned toward the right side of the first dimension, such as Alperen Şengün, Giannis Antetokounmpo, Mikael Jantunen, Lauri Markkanen and Isaac Bonga, are over_average in the majority of performance-related categories. On the other hand, those on the left side of the first dimension, such as Leon Kratzer, Sertac Sanli, Andre Gustavson, Ilari Seppala and Omer Faruk Yurtseven, are bellow_average in the majority of performance-related categories.
+
+Dimension $2$ is clearly defined by the position of a player. Other variables, such as the percentage of 2pt field goals or the percentage field goals, also contribute to shaping this dimension. Therefore, Dimension $2$ can be interpreted as the playing style axis.
+
+Moreover, considering the coordinates of the different categories, Dimension $2$ clearly separates the interior players (Centers and Forwards) from the exterior players (Guards).
+
+Considering the coordinates of the different categories, the following patterns can be described for the main statistics:
+- Center players tend to have over average values in variables such as 2PT.FG and FG, since they usually take shots close to the basket. Conversely, they tend to have below average values in 3PT.FG, as they rarely attempt long-distance shots.
+- Forward players tend to commit more personal fouls and grab more offensive rebounds, as their role often involves defending opponents and fighting for rebounds under the basket.
+- Guard players tend to have over average values in 3PT.FG, as they are typically responsible for taking shots from beyond the arc. On the other hand, their 2PT.FG and FG percentages are generally below average, since their shot attempts are usually made from longer distances and are therefore more difficult.
+
+By examining the players’ positions in the graph, as it it expected, each player is close to their position.
+
+Dimension $3$ also separates players to some extent according to their position; however, since the variance explained by this axis is considerably smaller, it is not as informative as the first two dimensions. This is expected, as the barplot of the eigenvalues clearly shows that dimensions $1$ and $2$ are the ones that best describe the variability of the data. 
+
+
+```{r}
+res.mca <- MCA(df_binary)
+
+names(res.mca)
+
+res.mca$eig
+barplot(res.mca$eig[,1], main="Eigenvalues", names.arg=1:nrow(res.mca$eig))
+abline(h = 1/17, col = "red")
+
+res.mca$var$coord
+
+res.mca$var
+dimdesc(res.mca)
+
+plot(res.mca,choix="var",title="Graph of the variables dim 1 vs 2")
+plot(res.mca,choix="var",axes=c(2,3),title="Graph of the variables dim 2 vs 3")
+
+# Exploring dimension 1
+
+plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "deepskyblue", "lightblue"), rep(c("black", "red"), 15)),title="Graph of the over/below average performance")
+
+plot(res.mca,col.ind="green",col.var=c(c("blue", "deepskyblue", "lightblue"), rep(c("black", "red"), 15)),title="Graph of the over/below average performance with individuals")
+
+sort(res.mca$ind$coord[, 1], decreasing = TRUE)[1:5]
+sort(res.mca$ind$coord[, 1], decreasing = FALSE)[1:5]
+
+# Exploring dimension 2
+
+plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),title="Graph of the playing style performance")
+
+plot(res.mca,col.ind="green",col.var=c(c("blue", "purple", "red"), rep("black",30)),title="Graph of the playing style performance with individuals")
+
+# Exploring dimension 3
+
+plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(2,4),title="Graph of the playing style performance")
+
+```
 
 
 
