@@ -1,0 +1,17 @@
+# RStudio project files
+.Rproj.user/
+*.Rproj
+
+# OS X temporary files
+._*
+
+# R data files
+*.RData
+*.rdata
+*.rda
+*.Rds
+*.rds
+
+# R history
+.Rhistory
+

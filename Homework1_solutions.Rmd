@@ -1,0 +1,31 @@
+---
+title: "Homework 1"
+author: "Toni Zarzoso Rives"
+date: "2025-11-06"
+output: html_document
+---
+
+Import the data set to R correctly and assign player names as rownames of the data frame
+
+```{r}
+install.packages("readxl")
+library(readxl)
+mydata <- read_excel("./data_Eurobasket_2025.xlsx")
+rownames(mydata) <- mydata$PLAYER
+```
+
+Check the structure of the data and assign correct type to each variable considering whether it is a categorical or numerical variable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
