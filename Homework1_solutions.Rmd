@@ -1,20 +1,126 @@
 ---
-title: "Homework 1"
-author: "Toni Zarzoso Rives"
-date: "2025-11-06"
-output: html_document
+title: "Homework_1"
+author: "Toni Zarzosa and Berta Torrents"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+  word_document:
+    toc: true
+    toc_depth: '3'
+    number_sections: true
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
+fontsize: 10pt
+editor_options:
+  chunk_output_type: console
 ---
 
-Import the data set to R correctly and assign player names as rownames of the data frame
-
+# Clear directory and import libraries
 ```{r}
-install.packages("readxl")
+options(contrasts=c("contr.treatment","contr.treatment"))
+
+if(!is.null(dev.list())) dev.off()
+rm(list = ls())
+
 library(readxl)
-mydata <- read_excel("./data_Eurobasket_2025.xlsx")
-rownames(mydata) <- mydata$PLAYER
+library(corrplot)
 ```
 
-Check the structure of the data and assign correct type to each variable considering whether it is a categorical or numerical variable.
+# Exploratory data analysis
+
+## Import the data set to R correctly and assign player names as rownames of the data frame
+
+The dataset has been imported with the *read_excel()* function from the *readxl* library. Using the *as.data.frame()* function, it has been converted to a data frame. 
+
+The row names of the data frame have been assigned as the players' names. Moreover, the column containing the players' names has been removed from the data frame since it is no longer needed after being set as row names.
+```{r}
+df <- read_excel("data_Eurobasket_2025.xlsx")
+
+df <- as.data.frame(df)
+
+rownames(df) <- df$PLAYER
+
+df <- df[,-1] # remove player column after setting it as a rowname
+```
+
+## Check the structure of the data and assign correct type to each variable considering whether it is a categorical or numerical variable
+
+The *summary()* function reveals that this data frame has 17 numeric variables called “GP”, “MIN”, “FG”, “2PT.FG”, “3PT.FG”, “FT”, “OREB”, “DREB”, “REB”, “AST”, “PF”, “TO”, “STL”, “BLK”,  “+/-” , “EFF” and “PTS”. In addition, there are two categorical variables called “Team” and “Position”, which should be transformed into factors.
+
+After assigning the correct type to each variable, the str function confirms that the structure of the data frame is properly defined.
+```{r}
+summary(df)
+
+df$Team <- as.factor(df$Team)
+
+df$Position <- as.factor(df$Position)
+
+str(df)
+```
+
+
+## Create data frame only using variables “Position”, “MIN”, “FG”, “2PT.FG”, “3PT.FG”, “FT”, “OREB”, “DREB”, “REB”, “AST”, “PF”, “TO”, “STL”, “BLK”, “EFF” and “PTS”. Check the correlations between numerical variables and summarize your findings
+
+A new data frame has been created based on the requested variables.
+
+Moreover, the correlation matrix of the numeric variables in the new data frame has been computed. To visualize the correlation results, the *corrplot()* function from the *corrplot* library has been used.
+
+The vast majority of the numerical variables are positively correlated. In fact, those that are negatively correlated have do show a strong relationship. The highest negative correlation is between “2PT.FG” and “3PT.FG”, with value of -0.311.
+
+Nonetheless, there are some particular interesting positive correlations. To analyze these results more effectively, we will divide the study into three groups:
+
+1) Very strong correlated variables (correlation > |0.90|):
+-
+
+2) Strong correlated variables (|0.90| > correlation > |0.70|):
+
+3) Moderate correlated variables (|0.70| > correlation > |0.50|):
+
+
+
+```{r}
+requested_var <- c("Position", "MIN", "FG", "2PT FG", "3PT FG", "FT", "OREB", "DREB", "REB", "AST", "PF", "TO", "STL", "BLK", "EFF", "PTS")
+
+df_subset <- df[,requested_var]
+
+cor_matrix <- cor(df_subset[,-1])
+cor_matrix
+corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation Matrix of Basketball Statistics")
+
+```
+
+
+
+# Application of PCA
+
+## Apply PCA on the created data frame by using PCA() function in FactoMineR package and taking the variables “Position” and and “EEF” as supplemantary variables
+
+## How many components should be extracted? Decide on the number of components considering eigenvalues
+
+## Interpret variable plots. How can each dimension be named? Use plot.PCA() function to show correlations between variables and the extracted dimensions. (For the variables you should use the argument choix = “var”). Plot all the extracted dimensions changing argument “axes”.
+
+
+## Show individual pilots for the extracted dimensions changing argument choix=“ind” in plot.PCA() function. Interpret the individual plots.
+
+# Application of MDS
+
+## Apply metric MDS using Euclidean distance on scaled numerical variables. Plot the data using the points on the first two coordinates using players names as label. Interpret the plot.
+
+## Calculate gower distance including variable “POSITION” to the data matrix. Then apply metric MDS on gower distance matrix.
+
+## Plot individual plots on the first two coordinates. Use different categorical and numerical variables as labels so as to explain clusters that are constructed.
+
+## Which MDS do you think better group the individuals? Why?
+
+# Application of MCA
+
+## Convert the numerical variables to binary variables with two categories as “over average” and “below average” performances
+
+## Apply MCA on these variables and interpret your findings
 
 
 
