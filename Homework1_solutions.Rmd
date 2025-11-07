@@ -29,6 +29,8 @@ rm(list = ls())
 library(readxl)
 library(corrplot)
 library(FactoMineR)
+library(cluster)
+library(ggplot2)
 ```
 
 # Exploratory data analysis
@@ -244,20 +246,225 @@ plot.PCA(res.pca, choix = "ind", axes = c(2, 3), habillage = 1)
 
 ## Apply metric MDS using Euclidean distance on scaled numerical variables. Plot the data using the points on the first two coordinates using players names as label. Interpret the plot.
 
-The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the *dist()* function. Using this matrix, 
+The Euclidean distance matrix, based on the scaled numerical variables, has been computed using the *dist()* function. Using this matrix, the *cmdscale* function has been applied. 
 
+The number of dimensions selected was $k=2$ (as required by the exercise). Taking into account the scree plot, it shows a noticeable elbow after the first component, indicating that retaining two dimensions captures most of the variance while keeping the solution interpretable. Moreover, the GOF obtained for the two-dimensional solution is $66.4%$, indicating that the map preserves a substantial proportion of the original distance information and provides a reasonably good representation of the relationships among the observations.
 
+The MDS individual plot groups together players with similar statistical profiles. In other words, the more similar two players are in their statistics, the closer they appear in the map.
+
+Two main clusters of players can be observed, reflecting groups of individuals with comparable performance patterns. Some players, such as Giannis Antetokounmpo, Alperen Sengun, and Lauri Markkanen, clearly stand out along the first dimension, showing distinctive all-around statistical profiles. In contrast, Kostas Antetokounmpo stands out along the second dimension, indicating a unique performance pattern relative to the rest.
+
+Taking into account the PCA results, it can be observed that the outstanding players identified in the MDS are, in fact, those with higher coordinates in PCA Dimensions $1$ and $2$, respectively. Hence, the first MDS coordinate appears to correspond to the first PCA dimension, while the second MDS coordinate relates to the second PCA dimension. It is also important to note that a rotation should be applied in order to obtain the same orientation and interpretation as in PCA, since the first PCA dimension was highly correlated with players exhibiting higher overall performance and productivity, such as Giannis Antetokounmpo, Alperen Sengun or Lauri Markkanen, whereas in the MDS map, these players are positioned on the left side of the first dimension. Similarly, a rotation along the Y-axis would be required to align the second MDS coordinate with the PCA second dimension, ensuring consistent interpretation across both analyses.
 
 ```{r}
-ds <- dist(scale(df_subset[,-1]), method = "euclidean")
+ds_eu <- dist(scale(df_subset[,-1]), method = "euclidean")
+
+res.mds.eu <- cmdscale(ds_eu, eig = TRUE, k = 2)
+
+res.mds.eu$GOF
+res.mds.eu$eig
+
+plot(1:length(res.mds.eu$eig), res.mds.eu$eig, 
+     type = "b",
+     xlab = "Dimension", 
+     ylab = "Eigenvalue",
+     main = "Scree Plot")
+
+
+x <- res.mds.eu$points[,1]
+y <- res.mds.eu$points[,2]
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with Euclidian distance", type="n")
+text(x, y, labels = row.names(df_subset), cex=.7)
+
+
+# Rotation to align with the PCA
+rot_mat <- matrix(c(-1, 0, 0, -1), nrow = 2, byrow = TRUE)
+eu_rot <- res.mds.eu$points %*% rot_mat
+
+x <- eu_rot[,1]
+y <- eu_rot[,2]
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with rotation and Euclidian distance", type="n")
+text(x, y, labels = row.names(df_subset), cex=.7)
 ```
 
 
 ## Calculate gower distance including variable “POSITION” to the data matrix. Then apply metric MDS on gower distance matrix.
 
+The gower distance including the position variable has been computed using the *daisy* function from the library *cluster*. Using this matrix, the *cmdscale* function has been applied.
+
+The number of dimensions selected was $k=2$ (as required by the exercise). Taking into account the scree plot, it shows a noticeable elbow after the first component, indicating that retaining two dimensions captures most of the variance while keeping the solution interpretable. 
+
+It is important to notice that, in the Euclidean distance case, both GOF values were identical. However, when using the gower distance, the two GOF components differ slightly. The first value $(0.56)$ measures the proportion of total variance explained by the two dimensions, considering both positive and negative eigenvalues, whereas the second value $(0.65)$ only takes into account the positive eigenvalues. This difference arises because the Gower distance combines mixed variable types.
+
+This slightly lower value is expected when using the gower distance, as it handles mixed data types and does not produce a perfectly Euclidean distance matrix, which typically leads to a less accurate but still meaningful low-dimensional representation of the relationships among the observations.
+
+```{r}
+ds_gw <- daisy(df_subset, metric = "gower")
+
+res.mds.gw <- cmdscale(ds_gw, eig = TRUE, k = 2)
+
+res.mds.gw$GOF
+res.mds.gw$eig
+
+plot(1:length(res.mds.gw$eig), res.mds.gw$eig, 
+     type = "b",
+     xlab = "Dimension", 
+     ylab = "Eigenvalue",
+     main = "Scree Plot")
+
+```
+
+
 ## Plot individual plots on the first two coordinates. Use different categorical and numerical variables as labels so as to explain clusters that are constructed.
 
+After plotting the individual map for the Gower distance, and following the same reasoning as for the Euclidean distance, a $90°$ rotation of the x-axis was applied to maintain a consistent interpretation of the coordinates across analyses.
+
+```{r}
+x <- res.mds.gw$points[,1]
+y <- res.mds.gw$points[,2]
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with Gower distance", type="n")
+text(x, y, labels = row.names(df_subset), cex=.7)
+
+
+# Rotation to align with the PCA
+rot_mat <- matrix(c(-1, 0, 0, 1), nrow = 2, byrow = TRUE)
+gw_rot <- res.mds.gw$points %*% rot_mat
+
+x <- gw_rot[,1]
+y <- gw_rot[,2]
+plot(x, y, xlab="Coordinate 1", ylab="Coordinate 2",
+     main="Individual plot using the first two coordinates with rotation and Gower distance", type="n")
+text(x, y, labels = row.names(df_subset), cex=.7)
+```
+
+The individual plots on the first two coordinates using different categorical and numerical variables as labels have been plotted using the *ggplot* function from library *ggplot2*. Two data frames were created to store the coordinates obtained from the MDS results together with the players’ information and their corresponding statistics, allowing for flexible visualization and interpretation of the results.
+
+The variables selected to interpret the MDS representation were chosen to capture both overall player performance and playing style characteristics, as these were the two main dimensions revealed by the PCA. Specifically, EFF, PTS, and MIN describe player productivity, scoring output, and participation volume, respectively, providing a comprehensive view of overall effectiveness. Meanwhile, 2PT FG and 3PT FG were included to represent contrasting playing styles. Together, these variables summarize the most relevant aspects of player performance and behavior on the court, and align consistently with the main patterns previously observed in the PCA and MDS analyses.
+
+```{r}
+# Euclidian df
+mds_eu_coords <- as.data.frame(eu_rot)
+colnames(mds_eu_coords) <- c("Dim1", "Dim2")
+mds_eu_coords$Player <- rownames(df_subset)
+mds_eu_coords$Position <- df_subset$Position
+mds_eu_coords$EFF <- df_subset$EFF
+mds_eu_coords$PTS <- df_subset$PTS
+mds_eu_coords$MIN <- df_subset$MIN
+mds_eu_coords$`3PT FG` <- df_subset$`3PT FG`
+mds_eu_coords$`2PT FG` <- df_subset$`2PT FG`
+
+# Gower df
+mds_gw_coords <- as.data.frame(gw_rot)
+colnames(mds_gw_coords) <- c("Dim1", "Dim2")
+mds_gw_coords$Player <- rownames(df_subset)
+mds_gw_coords$Position <- df_subset$Position
+mds_gw_coords$EFF <- df_subset$EFF
+mds_gw_coords$PTS <- df_subset$PTS
+mds_gw_coords$MIN <- df_subset$MIN
+mds_gw_coords$`3PT FG` <- df_subset$`3PT FG`
+mds_gw_coords$`2PT FG` <- df_subset$`2PT FG`
+```
+
+When the Position variable is included in the analysis, the MDS map based on the Gower distance clearly shows a better clustering of players according to their playing position (guards, forwards, and centers form clear clusters). This result is entirely expected, since the Euclidean-distance MDS does not account for the categorical Position variable, whereas the Gower-distance MDS explicitly incorporates it, allowing players with similar roles on the court to be grouped more accurately.
+
+It is worth noting that Ercan Osmani and Erkan Yilmaz are exceptions to the position-based clustering in the Gower-distance map. Although classified as a center and a forward, respectively, Osmani is positioned closer to the forwards cluster, while Yilmaz is closer to the centers cluster.
+
+```{r}
+ggplot(mds_eu_coords, aes(x = Dim1, y = Dim2, color = Position, label = Player)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  labs(title = "MDS (Euclidean distance): Player Position",
+       x = "Coordinate 1", y = "Coordinate 2", color = "Position") +
+  theme_minimal()
+
+ggplot(mds_gw_coords, aes(x = Dim1, y = Dim2, color = Position, label = Player)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  labs(title = "MDS (Gower distance): Player Position",
+       x = "Coordinate 1", y = "Coordinate 2", color = "Position") +
+  theme_minimal()
+```
+
+Regarding the Efficiency variable, both MDS plots show a very similar pattern. Outstanding players, such as Giannis Antetokounmpo, Alperen Sengun, and Lauri Markkanen, are clearly separated from the rest in both maps. It is true that the Euclidean-distance map tends to cluster players with lower efficiency together, whereas the Gower-distance map does not form such a distinct cluster for low-efficiency players. Nevertheless, groups of players according to their efficiency can still be clearly distinguished in both representations.
+
+Notice that both plots display a green gradient (from light to dark) along the x-axis. This perfectly aligns with the relationship observed between the first coordinate in the PCA and MCA analyses.
+
+```{r}
+ggplot(mds_eu_coords, aes(x = Dim1, y = Dim2, color = EFF, label = Player)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(title = "MDS (Euclidean distance): Efficiency (EFF)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "EFF") +
+  theme_minimal()
+
+ggplot(mds_gw_coords, aes(x = Dim1, y = Dim2, color = EFF, label = Player)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
+  labs(title = "MDS (Gower distance): Efficiency (EFF)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "EFF") +
+  theme_minimal()
+```
+
+Similar to the case of efficiency, both plots display a color gradient from pink to red along the x-axis, ordering players from lower to higher scorers. Point sizes also reflect playing time: smaller points correspond to players who play fewer minutes, while larger points indicate those with more minutes.
+
+Considering that the first coordinate seems to capture overall player performance, these patterns are consistent: players on the right side of the plots are among the most active and productive on the court, while those on the left contribute fewer minutes and points. Overall, both visualizations effectively cluster players according to their minutes played and scoring output.
+
+```{r}
+ggplot(mds_eu_coords, aes(x = Dim1, y = Dim2, color = PTS, size = MIN, label = Player)) +
+  geom_point(alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightpink", high = "red") +
+  labs(title = "MDS (Euclidean distance): PTS (color) and MIN (size)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "PTS", size = "MIN") +
+  theme_minimal()
+
+ggplot(mds_gw_coords, aes(x = Dim1, y = Dim2, color = PTS, size = MIN, label = Player)) +
+    geom_point(alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightpink", high = "red") +
+  labs(title = "MDS (Gower distance): PTS (color) and MIN (size)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "PTS", size = "MIN") +
+  theme_minimal()
+```
+
+The map using the Euclidean distance clearly separates players who make more 3PT shots from those who make fewer. Players positioned higher along the second dimension make fewer 3PT shots than those lower on this axis. A special mention goes to Sertac Sanli, who does not appear correctly within the 3PT. Although he is grouped with players who tend to miss threes, his point size is relatively large, indicating that he actually makes a significant number of 3PT shots, placing him outside the general pattern of the cluster. Regarding 2PT shots, the vertical axis shows a clear color gradient from dark blue to light blue. At the top of the plot are the players who make the most 2PT shots, while at the bottom are those who make the fewest. This pattern reinforces the idea that the second dimension reflects players’ efficiency in shooting.
+
+On the other hand, the map using the Gower distance shows a similar clustering to the Euclidean map regarding 3PT shooting. However, when looking at the 2PT shots, although it still separates the players who make more from those who make fewer, Johannes Voigtmann is incorrectly positioned, as he usually misses 2-point shots but appears near the middle of the second coordinate.
+
+```{r}
+ggplot(mds_eu_coords, aes(x = Dim1, y = Dim2, color = `2PT FG`, size = `3PT FG`, label = Player)) +
+  geom_point(alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "MDS (Euclidean distance): 2PT (color) and 3PT (size)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "2PT FG", size = "3PT FG") +
+  theme_minimal()
+
+ggplot(mds_gw_coords, aes(x = Dim1, y = Dim2, color = `2PT FG`, size = `3PT FG`, label = Player)) +
+  geom_point(alpha = 0.8) +
+  geom_text_repel(size = 3, max.overlaps = 25) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "MDS (Gower distance): 2PT (color) and 3PT (size)",
+       x = "Coordinate 1", y = "Coordinate 2", color = "2PT FG", size = "3PT FG") +
+  theme_minimal()
+```
+
 ## Which MDS do you think better group the individuals? Why?
+
+First of all, it is worth noting that the goodness-of-fit (GOF) of both MDS solutions is very similar. Therefore, when deciding which of the two better groups the individuals, we considered other aspects, such as analyzing the plots to see which clusters can be formed based on the variables in the data frame.
+
+Overall, both MDS methods provide a correct mapping of the individuals when considering overall performance statistics. The Euclidean MDS may cluster individuals slightly better when looking at efficiency or points scored, but the Gower MDS also produces meaningful clusters for these variables.
+
+However, when taking into account the players’ positions, the Gower map clearly defines the clusters much better, as it incorporates this categorical variable. In contrast, the Euclidean map does not account for position, so the clustering is less precise in this regard.
+
+Since the players’ positions are key in determining their statistics, as shown by the PCA, it is important that this variable is considered when forming clusters.
+
+For this reason, we conclude that the Gower MDS produces groups that feel more realistic from a basketball perspective, capturing both their performance statistics and their roles on the court.
 
 # Application of MCA
 
