@@ -553,7 +553,7 @@ plot(res.mca,col.ind="green",col.var=c(c("blue", "purple", "red"), rep("black",3
 
 plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(2,3),title="Graph of the playing style performance")
 
-plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(1,3),title="Graph of the playing style performance")
+plot(res.mca,col.ind="green",col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(1,3),title="Graph of the playing style performance")
 ```
 
 Moreover, taking Efficiency as a supplementary variable is also coherent with the approach used in the PCA, where it was not included in the main analysis. Interestingly, both methods (PCA and MCA) show very similar structures, suggesting that the categorical representation obtained from the MCA is consistent with the quantitative relationships revealed by the PCA.
