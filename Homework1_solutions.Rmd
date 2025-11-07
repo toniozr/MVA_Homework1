@@ -119,63 +119,126 @@ corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation M
 ```
 
 
-
 # Application of PCA
 
 ## Apply PCA on the created data frame by using PCA() function in FactoMineR package and taking the variables “Position” and and “EEF” as supplemantary variables
 
+The *PCA()* function from the library *FactoMineR* has been applied to the *df_subset* taking the Position as a supplementary qualitative variable and the EFF as supplementary quantitative variable.
+
 ```{r}
-library(FactoMineR)
-library(factoextra)
-
-# --- 2a) PCA with supplementary variables ---
-# - Position = qualitative supplementary (index 1)
-# - EFF = quantitative supplementary (find its column index)
 eff_idx <- which(colnames(df_subset) == "EFF")
+pos_idx <- which(colnames(df_subset) == "Position")
 
-res <- PCA(df_subset,
+res.pca <- PCA(df_subset,
            scale.unit = TRUE,
-           quali.sup  = 1,                      # Position as supplementary qualitative
-           quanti.sup = eff_idx,                # EFF as supplementary quantitative
+           quali.sup  = pos_idx,
+           quanti.sup = eff_idx,
            graph = FALSE)
 ```
 
+
 ## How many components should be extracted? Decide on the number of components considering eigenvalues
 
+In order to determine the number of components to extract, the eigenvalues play a key role. Each eigenvalue represents the amount of variance explained by its corresponding principal component. Therefore, the higher the eigenvalue, the greater the proportion of total variability accounted for by that dimension.
+
+Since the data is standardized, it makes sense to apply the Kaiser criterion, which retains components with eigenvalues greater than 1. In this case, the first three components (with eigenvalues $6.25$, $2.76$, and $1.25$) meet this requirement. Moreover, the cumulative percentage of variance shows that these three components explain $73.26\%$ of the total variance, which indicates that they capture most of the information in the data frame.
+
+The scree plot shows a noticeable elbow after the second component, indicating that retaining three components captures most of the variance while keeping the solution interpretable.
+
+Looking at the variable–dimension correlations, the choice of components makes sense.
+
+- Dimension $1$ shows strong positive correlations with MIN, DREB, REB, PTS, TO, and other performance variables, reflecting overall playing time and productivity.
+
+- Dimension $2$ is mainly associated with FG, 2PT FG, and BLK, contrasting with 3PT FG, representing an interior–exterior playing style axis.
+
+- Dimension $3$ is moderately linked to 3PT FG and FT, capturing differences between shooting efficiency and playmaking. Note that these variables were already partially reflected in the first two dimensions.
+
+Together, these three dimensions summarize the main sources of variability in the
+data, balancing completeness and interpretability.
+
 ```{r}
-# --- 2b) Eigenvalues / how many components ---
-print(res$eig)   # columns: eigenvalue, % of var, cum %
-# The loadings of the variables on the components
-corrplot(res$var$coord)
-# Scree plot. Dependency - library(factoextra)
-fviz_eig(res)
+res.pca$eig
+
+barplot(res.pca$eig[,1], names.arg = 1:14, main = "Scree Plot", xlab = "Dimension", ylab = "Eigenvalue", col = "blue")
+lines(res.pca$eig[,1], type = "o", col = "red", pch = 19)
+
+res.pca$var$coord
+corrplot(res.pca$var$coord)
 ```
 
 ## Interpret variable plots. How can each dimension be named? Use plot.PCA() function to show correlations between variables and the extracted dimensions. (For the variables you should use the argument choix = “var”). Plot all the extracted dimensions changing argument “axes”.
 
+- Dimension $1$: Overall performance and productivity axis
+Dimension $1$ shows strong positive loadings for variables related to overall workload and productivity. More specifically, DREB $(\sim 0.92)$, PTS $(\sim 0.92)$, REB $(\sim 0.91)$, MIN $(\sim 0.87)$, TO $(\sim 0.79)$, OREB $(\sim 0.73)$, STL $(\sim 0.64)$, and AST $(\sim 0.68)$ contribute most to this dimension.
+
+Variables with near-zero or smaller loadings on Dimension $1$ are mainly related to shooting efficiency. FG, 2PT FG, 3PT FG, and FT contribute less to this dimension.
+
+Hence, this axis can be interpreted as an overall workload/impact direction. In other words, dimension $1$ is associated with players who spend more minutes on the court, grab many rebounds, score a lot of points, and commit more turnovers. On the other hand, players with lower dimension $1$ coordinates are those with lower usage or with more limited roles on the team.
+
+The supplementary quantitative variable EFF aligns strongly positively with dimension $1$. This is expected, as efficiency indices are constructed based on overall workload and productivity.
+
+- Dimension $2$: Interior vs perimeter playing style axis
+Dimension $2$ shows strong positive loadings for variables related to actions closer to the basket. More specifically, FG $(\sim 0.80)$ and 2PT FG $(\sim 0.79)$. It also has slightly positive loadings for other near-basket actions, such as BLK $(\sim 0.64)$ and OREB $(\sim 0.42)$.
+
+On the other hand, it is negatively associated with variables related to actions farther from the basket, such as shooting threes 3PT FG $(\sim −0.60)$, taking free throws FT $(\sim −0.32)$, or creating plays for a teammate to score AST $(\sim−0.45)$.
+
+Hence, this axis can be interpreted as a contrast between the interior and perimeter profiles. In other words, dimension $2$ is positively associated with players who are efficient at taking 2PT field goals and who have strong interior presence, such as blocking shots and grabbing offensive rebounds. Conversely, it is negatively associated with players who tend to play farther from the basket and perform more actions such as 3PT field goals, free throws, and assists. It’s interesting because players of this profile tend not to be the best shooters and is common to see them missing free throws.
+
+- Dimension 3: Workload vs shooting precision axis
+As expected, Dimension $3$ does not show strong loadings on any single variable. It could be said that it is slightly positively related to statistics associated with players who are more involved in the game, performing tasks such as handling the ball, making assists, grabbing rebounds, and committing turnovers. Indeed, it has slightly positive loadings for TO $(\sim 0.30)$, AST $(\sim 0.25)$, OREB $(\sim 0.24)$, and REB $(\sim 0.21)$.
+
+On the other hand, it is negatively associated with players who are more focused on shooting efficiency. In fact, it has negative loadings for FT $(\sim −0.58)$, 3PT FG $(\sim −0.57)$, FG $(\sim −0.39)$, PF $(\sim −0.33)$, and 2PT FG $(\sim −0.24)$.
+
+We could say that, similar to Dimension $2$, this dimension is related to the supplementary variable position, since a player’s position is key in determining their responsibilities on the court.
+
 ```{r}
-plot.PCA(res, choix = "var", axes = c(1, 2))
-plot.PCA(res, choix = "var", axes = c(1, 3))
-plot.PCA(res, choix = "var", axes = c(2, 3))
+plot.PCA(res.pca, choix = "var", axes = c(1, 2))
+plot.PCA(res.pca, choix = "var", axes = c(1, 3))
+plot.PCA(res.pca, choix = "var", axes = c(2, 3))
 ```
+
 
 ## Show individual pilots for the extracted dimensions changing argument choix=“ind” in plot.PCA() function. Interpret the individual plots.
 
+- Dimension $1$ vs Dimension $2$
+
+Players on the right side of the first dimension axis, such as, Giannis Antetokounmpo, Alperen Sengun, Lauri Markkanen, Franz Wagner and Daniel Theis post high PTS, DREB, MIN, AST, and STL. Moreover, they also stand out in the efficiency statistic (EFF). Among them, Giannis Antetokounmpo, Alperen Sengun and Lauri Markkanen are extreme on OREB, REB, DREB, EFF, PTS, TO, STL, MIN, BLK, and AST, demonstrating a massive all-around impact.
+
+On the left side of first dimension aixs, there are players such as Sertac Sanli, Leon Kratzer, Ilari Seppala, Onuralp Bitim and Andre Gustavson. These plaers have either low overall stats (Seppala and Bitim have low 2PT.FG, FG, REB, EFF, BLK, PTS and TO) or narrow interior roles (Sanli has high 2PT.FG and FG but low 3PT.FG, MIN, AST, FT, PTS, STL, EFF and TO).
+
+Since EFF correlates strongly with dimension $1$ $(\sim 0.96)$, those players with high productivity will be on the right and those with low productivity on the left.
+
+On the top side of the graphic, there are players such as Kostas Antetokounmpo, Adem Bona, Omer Faruk Yurtseven, Erkan Yilmaz, and Sertac Sanli, who stand out with high 2PT FG and FG, and lower 3PT FG, AST, and FT. Kostas Antetokounmpo is the player who stands out the most in this dimension, meaning he is the player with the most efficiency plays close to the basket.
+
+Finally, the bottom side of the graphic includes players such as Shane Larkin, Dennis Schröder, Tyler Dorsey, Kostas Sloukas, and Furkan Korkmaz, who have lower 2PT FG and FG and higher 3PT FG, AST, and FT, highlighting those who perform more plays on the perimeter.
+
+If we look at the supplementary variable position, we can clearly see how dimension $2$ separates players by their roles: center, forward, and guard. This makes perfect sense, since depending on their position, a player will tend to stand out more in activities close to the basket or in those taking place in more external areas. Naturally, this dimension places centers in the upper area (since they play closer to the basket) and guards more towards the middle of the court.
+
+Players accumulated near the center of the graphic represent the average players. In other words, these are players who do not particularly stand out in terms of efficiency or in performing plays either near the basket or on the perimeter. 
+
+
+- Dimension $1$ vs Dimension $3$
+
+If we look at the horizontal axis of the graphic, we see that the players on the left and right sides are the same as in the previous graph.
+
+The vertical axis of the graphic is particularly interesting. On the top side, players such as Daniel Theis, Johannes Thiemann, and Tristan Da Silva show high AST and OREB values, reflecting greater all-around involvement and playmaking activity. These individuals act as creators and high-involvement players who generate plays and second-chance opportunities but accept a higher turnover risk.
+
+Notice that the vast majority of players are clustered on the top side of the graphic. This makes sense, as most players generally have the role of facilitating plays and passing the ball, while there are fewer players who stand out solely as strong shooters.
+
+However, there are certain players, such as Giannis Antetokounmpo, Alperen Şengün, and Andre Gustafson, who exhibit lower AST but higher efficiency metrics, such as FT, 3PT FG, and FG. This indicates more disciplined and efficient profiles that contribute through clean scoring with fewer mistakes.
+
+
+- Dimension $2$ vs Dimension $3$
+
+The players who stand out in each dimension are the same as in the previous graphs. It is important to highlight the cluster of players that appears in the second quadrant. This is completely normal, since most players tend to combine a perimeter-oriented playing style (low on Dimension $2$) with high involvement and playmaking activity (high on Dimension $3$), reflecting their contribution through assists, ball handling, and overall participation in offensive actions rather than plays near the basket.
+
 ```{r}
-# --- 2d) Individual plots (players) ---
 # Color individuals by Position for interpretation (habillage = col index of the qualitative sup variable)
-plot.PCA(res, choix = "ind", axes = c(1, 2), habillage = 1)
-plot.PCA(res, choix = "ind", axes = c(1, 3), habillage = 1)
-plot.PCA(res, choix = "ind", axes = c(2, 3), habillage = 1)
-
-# More visually appealing alternative
-fviz_pca_ind(res, col.ind = df$Position)
-fviz_pca_ind(res, col.ind = df$Position, axes = c(1, 3))
-fviz_pca_ind(res, col.ind = df$Position, axes = c(2, 3))
-
-# Biplot
-fviz_pca_biplot(res)
+plot.PCA(res.pca, choix = "ind", axes = c(1, 2), habillage = 1)
+plot.PCA(res.pca, choix = "ind", axes = c(1, 3), habillage = 1)
+plot.PCA(res.pca, choix = "ind", axes = c(2, 3), habillage = 1)
 ```
+
 
 # Application of MDS
 
@@ -229,24 +292,26 @@ After plotting a bar plot of the eigenvalues with a horizontal red line at $h = 
 
 In order to determine which categories contribute the most to each of the relevant dimensions, two complementary strategies have been applied. On the one hand, categories with higher $cos^2$ values in a given dimension are considered to contribute more strongly to that dimension. On the other hand, by examining the category cloud plots, we can visually observe how the dimensions separate the categories and which variables are most influential in defining the corresponding axes.
 
-Dimension $1$ is clearly defined by the efficiency of a player. Other variables, such as the minutes played, points scored, number of rebounds, and turnovers, also contribute to shaping this dimension. Therefore, Dimension $1$ can be interpreted as the performance axis.
+Dimension $1$ is clearly defined by the efficiency of a player. Other variables, such as the minutes played, points scored, number of rebounds, and turnovers, also contribute to shaping this dimension. Therefore, Dimension $1$ can be interpreted as the overall performance and productivity axis.
 
 Moreover, considering the coordinates of the different categories, Dimension $1$ clearly separates the below_average categories from the over_average ones. The plot shows that all below_average categories are located on the left, whereas the over_average categories are on the right.
 
 By examining the players’ positions in the graph, it becomes evident which players perform best and worst overall. Those positioned toward the right side of the first dimension, such as Alperen Sengün, Giannis Antetokounmpo, Mikael Jantunen, Lauri Markkanen and Isaac Bonga, are over_average in the majority of performance-related categories. On the other hand, those on the left side of the first dimension, such as Leon Kratzer, Sertac Sanli, Andre Gustavson, Ilari Seppala and Omer Faruk Yurtseven, are bellow_average in the majority of performance-related categories.
 
-Dimension $2$ is clearly defined by the position of a player. Other variables, such as the percentage of 2pt field goals or the percentage field goals, also contribute to shaping this dimension. Therefore, Dimension $2$ can be interpreted as the playing style axis.
+Dimension $2$ is clearly defined by the player’s position. Other variables, such as 2PT and 3PT field goal percentages, overall field goal percentage, offensive rebounds, and blocks, also contribute to shaping this dimension. Therefore, Dimension $2$ can be interpreted as an interior vs perimeter playing style axis.
 
 Moreover, considering the coordinates of the different categories, Dimension $2$ clearly separates the interior players (Centers and Forwards) from the exterior players (Guards).
 
 Considering the coordinates of the different categories, the following patterns can be described for the main statistics:
-- Center players tend to have over average values in variables such as 2PT.FG and FG, since they usually take shots close to the basket. Conversely, they tend to have below average values in 3PT.FG, as they rarely attempt long-distance shots.
+- Center players tend to have over average values in variables such as 2PT.FG, FG and BLK, since they usually take shots close to the basket and tend to block the rivals shootings. Conversely, they tend to have below average values in 3PT.FG, as they rarely attempt long-distance shots.
 - Forward players tend to commit more personal fouls and grab more offensive rebounds, as their role often involves defending opponents and fighting for rebounds under the basket.
-- Guard players tend to have over average values in 3PT.FG, as they are typically responsible for taking shots from beyond the arc. On the other hand, their 2PT.FG and FG percentages are generally below average, since their shot attempts are usually made from longer distances and are therefore more difficult.
+- Guard players tend to have over average values in 3PT.FG, as they are typically responsible for taking shots from beyond the arc. On the other hand, their 2PT.FG and FG percentages are generally below average, since their shot attempts are usually made from longer distances and are therefore more difficult. Moreover, the number of offensive rebounds is also very low, since they tend to play far from the rivals basket.
 
 By examining the players’ positions in the graph, as it it expected, each player is close to their position.
 
-Dimension $3$ also separates players to some extent according to their position; however, since the variance explained by this axis is considerably smaller, it is not as informative as the first two dimensions. This is expected, as the barplot of the eigenvalues clearly shows that dimensions $1$ and $2$ are the ones that best describe the variability of the data.
+Dimension $3$ is also clearly defined by the players’ positions. Other variables, such as 3PT field goal percentage, free throws, number of assists, and personal fouls, also contribute to shaping this dimension. However, since the variance explained by this axis is considerably smaller, it is not as informative as the first two dimensions. This is expected, as the bar plot of the eigenvalues clearly shows that Dimensions $1$ and $2$ are the ones that best describe the variability in the data. In fact, when the third dimension is plotted, the vast majority of categories form a cluster in the center of the graphic. Hence, it is difficult to interpretate this dimension.
+
+It is important to note that the first and second dimensions of the PCA are closely related to the first and second dimensions of the MCA, as both capture similar underlying patterns in player performance — the first dimension representing overall workload and impact, and the second reflecting the contrast between interior and perimeter playing styles.
 
 ```{r}
 res.mca <- MCA(df_binary)
@@ -259,6 +324,7 @@ res.mca$var$coord
 
 res.mca$var
 dimdesc(res.mca)
+
 
 plot(res.mca,choix="var",title="Graph of the variables dim 1 vs 2")
 plot(res.mca,choix="var",axes=c(2,3),title="Graph of the variables dim 2 vs 3")
@@ -280,24 +346,29 @@ plot(res.mca,col.ind="green",col.var=c(c("blue", "purple", "red"), rep("black",3
 
 # Exploring dimension 3
 
-plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(2,4),title="Graph of the playing style performance")
+plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(2,3),title="Graph of the playing style performance")
+
+plot(res.mca,invisible=c("ind"),col.var=c(c("blue", "purple", "red"), rep("black",30)),axes=c(1,3),title="Graph of the playing style performance")
 ```
 
-Since all the binary variables represent whether each statistic is above or below the mean, and the Position variable is conceptually different from them, it makes sense to perform an MCA using only the binary variables, while treating Position as a supplementary variable.
+Moreover, taking Efficiency as a supplementary variable is also coherent with the approach used in the PCA, where it was not included in the main analysis. Interestingly, both methods (PCA and MCA) show very similar structures, suggesting that the categorical representation obtained from the MCA is consistent with the quantitative relationships revealed by the PCA.
 
-In this case, since there are 15 binary categories, the maximum number of dimensions is $15$. Following the same reasoning as before, the relevant dimensions are $1$ and $2$.
+In this case, since there are $14$ binary categories, the maximum number of dimensions is $14$. Following the same reasoning as before, the relevant dimensions are $1$ and $2$.
 
 These additional MCA results do not provide substantially new insights compared to the previous analysis. Instead, they confirm the same general patterns observed before: Dimension $1$ mainly reflects overall player performance (distinguishing between below and over average players), while Dimension $2$ captures differences in shooting profiles, separating players who rely more on close-range shots from those who focus on three-point attempts.
 
+In fact, it can be observed that Dimension $1$ is highly positively correlated with the supplementary quantitative variable EFF, whereas Dimension $2$ is clearly influenced by the supplementary qualitative variable Position, consistent with what was observed in the PCA results.
+
 ```{r}
 # Position as a suplementary variable
-
-res.mca.extra <- MCA(df_binary, quali.sup=1)
+df_binary$EFF <- NULL
+df_binary$EFF <- df_subset$EFF
+res.mca.extra <- MCA(df_binary, quali.sup=1, quanti.sup = 16)
 
 summary(res.mca.extra)
 
 barplot(res.mca.extra$eig[,1], main="Eigenvalues extra MCA", names.arg=1:nrow(res.mca.extra$eig))
-abline(h = 1/15, col = "red")
+abline(h = 1/14, col = "red")
 
 res.mca.extra$var$coord
 
@@ -305,8 +376,6 @@ res.mca.extra$var
 
 plot(res.mca.extra,invisible=c("ind"),col.var=c(rep(c("blue", "red"), 15)),title="Graph of the over/below average performance of the extra MCA")
 ```
-
-
 
 
 
