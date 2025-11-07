@@ -124,12 +124,58 @@ corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation M
 
 ## Apply PCA on the created data frame by using PCA() function in FactoMineR package and taking the variables “Position” and and “EEF” as supplemantary variables
 
+```{r}
+library(FactoMineR)
+library(factoextra)
+
+# --- 2a) PCA with supplementary variables ---
+# - Position = qualitative supplementary (index 1)
+# - EFF = quantitative supplementary (find its column index)
+eff_idx <- which(colnames(df_subset) == "EFF")
+
+res <- PCA(df_subset,
+           scale.unit = TRUE,
+           quali.sup  = 1,                      # Position as supplementary qualitative
+           quanti.sup = eff_idx,                # EFF as supplementary quantitative
+           graph = FALSE)
+```
+
 ## How many components should be extracted? Decide on the number of components considering eigenvalues
+
+```{r}
+# --- 2b) Eigenvalues / how many components ---
+print(res$eig)   # columns: eigenvalue, % of var, cum %
+# The loadings of the variables on the components
+corrplot(res$var$coord)
+# Scree plot. Dependency - library(factoextra)
+fviz_eig(res)
+```
 
 ## Interpret variable plots. How can each dimension be named? Use plot.PCA() function to show correlations between variables and the extracted dimensions. (For the variables you should use the argument choix = “var”). Plot all the extracted dimensions changing argument “axes”.
 
+```{r}
+plot.PCA(res, choix = "var", axes = c(1, 2))
+plot.PCA(res, choix = "var", axes = c(1, 3))
+plot.PCA(res, choix = "var", axes = c(2, 3))
+```
 
 ## Show individual pilots for the extracted dimensions changing argument choix=“ind” in plot.PCA() function. Interpret the individual plots.
+
+```{r}
+# --- 2d) Individual plots (players) ---
+# Color individuals by Position for interpretation (habillage = col index of the qualitative sup variable)
+plot.PCA(res, choix = "ind", axes = c(1, 2), habillage = 1)
+plot.PCA(res, choix = "ind", axes = c(1, 3), habillage = 1)
+plot.PCA(res, choix = "ind", axes = c(2, 3), habillage = 1)
+
+# More visually appealing alternative
+fviz_pca_ind(res, col.ind = df$Position)
+fviz_pca_ind(res, col.ind = df$Position, axes = c(1, 3))
+fviz_pca_ind(res, col.ind = df$Position, axes = c(2, 3))
+
+# Biplot
+fviz_pca_biplot(res)
+```
 
 # Application of MDS
 
