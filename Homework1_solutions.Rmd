@@ -72,7 +72,7 @@ A new data frame has been created based on the requested variables.
 
 Moreover, the correlation matrix of the numeric variables in the new data frame has been computed. To visualize the correlation results, the *corrplot()* function from the *corrplot* library has been used.
 
-The vast majority of the numerical variables are positively correlated. In fact, those that are negatively correlated have do show a strong relationship. The highest negative correlation is between “2PT.FG” and “3PT.FG”, with value of -0.311.
+The vast majority of numerical variables are positively correlated. In fact, those that are negatively correlated do not show a strong relationship. The highest negative correlation is between 2PT.FG and 3PT.FG, with value of $-0.311$. A player who takes a lot of 3-point shots may take fewer shots near the basket, and vice versa, but this trade-off is not extreme.
 
 Nonetheless, there are some particular interesting positive correlations. To analyze these results more effectively, we will divide the study into three groups:
 
@@ -581,7 +581,6 @@ res.mca.extra$var
 
 plot(res.mca.extra,invisible=c("ind"),col.var=c(rep(c("blue", "red"), 15)),title="Graph of the over/below average performance of the extra MCA")
 ```
-
 
 
 
