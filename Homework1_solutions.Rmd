@@ -121,7 +121,7 @@ corrplot(cor_matrix, method = "number", tl.col = "black", title = "Correlation M
 
 # Application of PCA
 
-## Apply PCA on the created data frame by using PCA() function in FactoMineR package and taking the variables “Position” and and “EEF” as supplemantary variables
+## Apply PCA on the created data frame by using PCA() function in FactoMineR package and taking the variables “Position” and and “EEF” as supplementary variables
 
 The *PCA()* function from the library *FactoMineR* has been applied to the *df_subset* taking the Position as a supplementary qualitative variable and the EFF as supplementary quantitative variable.
 
@@ -198,7 +198,7 @@ plot.PCA(res.pca, choix = "var", axes = c(2, 3))
 ```
 
 
-## Show individual pilots for the extracted dimensions changing argument choix=“ind” in plot.PCA() function. Interpret the individual plots.
+## Show individual plots for the extracted dimensions changing argument choix=“ind” in plot.PCA() function. Interpret the individual plots.
 
 - Dimension $1$ vs Dimension $2$
 
@@ -249,9 +249,7 @@ The Euclidean distance matrix, based on the scaled numerical variables, has been
 
 
 ```{r}
-ds <- dist(scale(df_subset[,-1]), mathod = "euclidean")
-
-
+ds <- dist(scale(df_subset[,-1]), method = "euclidean")
 ```
 
 
@@ -296,7 +294,7 @@ Dimension $1$ is clearly defined by the efficiency of a player. Other variables,
 
 Moreover, considering the coordinates of the different categories, Dimension $1$ clearly separates the below_average categories from the over_average ones. The plot shows that all below_average categories are located on the left, whereas the over_average categories are on the right.
 
-By examining the players’ positions in the graph, it becomes evident which players perform best and worst overall. Those positioned toward the right side of the first dimension, such as Alperen Sengün, Giannis Antetokounmpo, Mikael Jantunen, Lauri Markkanen and Isaac Bonga, are over_average in the majority of performance-related categories. On the other hand, those on the left side of the first dimension, such as Leon Kratzer, Sertac Sanli, Andre Gustavson, Ilari Seppala and Omer Faruk Yurtseven, are bellow_average in the majority of performance-related categories.
+By examining the players’ positions in the graph, it becomes evident which players perform best and worst overall. Those positioned toward the right side of the first dimension, such as Alperen Şengün, Giannis Antetokounmpo, Mikael Jantunen, Lauri Markkanen and Isaac Bonga, are over_average in the majority of performance-related categories. On the other hand, those on the left side of the first dimension, such as Leon Kratzer, Sertac Sanli, Andre Gustavson, Ilari Seppala and Omer Faruk Yurtseven, are below_average in the majority of performance-related categories.
 
 Dimension $2$ is clearly defined by the player’s position. Other variables, such as 2PT and 3PT field goal percentages, overall field goal percentage, offensive rebounds, and blocks, also contribute to shaping this dimension. Therefore, Dimension $2$ can be interpreted as an interior vs perimeter playing style axis.
 
@@ -309,7 +307,7 @@ Considering the coordinates of the different categories, the following patterns 
 
 By examining the players’ positions in the graph, as it it expected, each player is close to their position.
 
-Dimension $3$ is also clearly defined by the players’ positions. Other variables, such as 3PT field goal percentage, free throws, number of assists, and personal fouls, also contribute to shaping this dimension. However, since the variance explained by this axis is considerably smaller, it is not as informative as the first two dimensions. This is expected, as the bar plot of the eigenvalues clearly shows that Dimensions $1$ and $2$ are the ones that best describe the variability in the data. In fact, when the third dimension is plotted, the vast majority of categories form a cluster in the center of the graphic. Hence, it is difficult to interpretate this dimension.
+Dimension $3$ is also clearly defined by the players’ positions. Other variables, such as 3PT field goal percentage, free throws, number of assists, and personal fouls, also contribute to shaping this dimension. However, since the variance explained by this axis is considerably smaller, it is not as informative as the first two dimensions. This is expected, as the bar plot of the eigenvalues clearly shows that Dimensions $1$ and $2$ are the ones that best describe the variability in the data. In fact, when the third dimension is plotted, the vast majority of categories form a cluster in the center of the graphic. Hence, it is difficult to interpret this dimension.
 
 It is important to note that the first and second dimensions of the PCA are closely related to the first and second dimensions of the MCA, as both capture similar underlying patterns in player performance — the first dimension representing overall workload and impact, and the second reflecting the contrast between interior and perimeter playing styles.
 
