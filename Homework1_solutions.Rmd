@@ -31,6 +31,7 @@ library(corrplot)
 library(FactoMineR)
 library(cluster)
 library(ggplot2)
+library(ggrepel)
 ```
 
 # Exploratory data analysis
